@@ -8,11 +8,11 @@
   &emsp;|--lua <br>
   &emsp;|--luahttp
 
-#注意事项
+# 注意事项
 - 本库只做http协议解析
 - 数据收发由调用方实现
 
-#用法
+# 用法
 ```lua
 local lhttp = require("luahttp")
 
@@ -42,5 +42,5 @@ end
 
 ```
 
-#备注
+# 备注
 本库参考自https://github.com/jeremycw/httpserver.h。
