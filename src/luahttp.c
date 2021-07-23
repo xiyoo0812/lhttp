@@ -106,7 +106,7 @@ int lrequest_chunk(lua_State* L) {
 int lrequest_is_chunk(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
-        int ischunk = http_request_has_flag(req, HTTP_FLG_STREAMED);
+        int ischunk = http_request_has_flag(req, HTTP_FLG_CHUNK);
         lua_pushboolean(L, ischunk > 0);
         return 1;
     }
