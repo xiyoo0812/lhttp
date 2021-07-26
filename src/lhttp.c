@@ -1,19 +1,10 @@
-#pragma once
-
+#include "http.h"
 
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
 
-#include "http.c"
-
-#ifdef _MSC_VER
-#define LHTTP_API _declspec(dllexport)
-#else
-#define LHTTP_API extern
-#endif
-
-int lrequest_response(lua_State* L) {
+static int lrequest_response(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         int code = lua_tointeger(L, 2);
@@ -26,7 +17,7 @@ int lrequest_response(lua_State* L) {
     return 0;
 }
 
-int lrequest_process(lua_State* L) {
+static int lrequest_process(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_process_request(req);
@@ -34,7 +25,7 @@ int lrequest_process(lua_State* L) {
     return 0;
 }
 
-int lrequest_close(lua_State* L) {
+static int lrequest_close(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_close_request(req);
@@ -42,7 +33,7 @@ int lrequest_close(lua_State* L) {
     return 0;
 }
 
-int lrequest_append(lua_State* L) {
+static int lrequest_append(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         size_t len;
@@ -54,7 +45,7 @@ int lrequest_append(lua_State* L) {
     return 0;
 }
 
-int lrequest_state(lua_State* L) {
+static int lrequest_state(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         lua_pushinteger(L, req->state);
@@ -63,7 +54,7 @@ int lrequest_state(lua_State* L) {
     return 0;
 }
 
-int lrequest_method(lua_State* L) {
+static int lrequest_method(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_string_t method = http_request_method(req);
@@ -73,7 +64,7 @@ int lrequest_method(lua_State* L) {
     return 0;
 }
 
-int lrequest_target(lua_State* L) {
+static int lrequest_target(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_string_t target = http_request_target(req);
@@ -83,7 +74,7 @@ int lrequest_target(lua_State* L) {
     return 0;
 }
 
-int lrequest_body(lua_State* L) {
+static int lrequest_body(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_string_t target = http_request_body(req);
@@ -93,7 +84,7 @@ int lrequest_body(lua_State* L) {
     return 0;
 }
 
-int lrequest_chunk(lua_State* L) {
+static int lrequest_chunk(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         http_string_t chunk = http_request_chunk(req);
@@ -103,7 +94,7 @@ int lrequest_chunk(lua_State* L) {
     return 0;
 }
 
-int lrequest_is_chunk(lua_State* L) {
+static int lrequest_is_chunk(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         int ischunk = http_request_has_flag(req, HTTP_FLG_CHUNK);
@@ -113,7 +104,7 @@ int lrequest_is_chunk(lua_State* L) {
     return 0;
 }
 
-int lrequest_header(lua_State* L) {
+static int lrequest_header(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         const char* key = lua_tostring(L, 2);
@@ -124,7 +115,7 @@ int lrequest_header(lua_State* L) {
     return 0;
 }
 
-int lrequest_headers(lua_State* L) {
+static int lrequest_headers(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
         int iter = 0;
@@ -165,7 +156,7 @@ static int lhttp_create_request(lua_State* L) {
     return 1;
 }
 
-int lresponse_close(lua_State* L) {
+static int lresponse_close(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     if (res) {
         http_close_response(res);
@@ -173,7 +164,7 @@ int lresponse_close(lua_State* L) {
     return 0;
 }
 
-int lresponse_status(lua_State* L) {
+static int lresponse_status(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     if (res) {
         int status = lua_tointeger(L, 2);
@@ -182,7 +173,7 @@ int lresponse_status(lua_State* L) {
     return 0;
 }
 
-int lresponse_body(lua_State* L) {
+static int lresponse_body(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     if (res) {
         size_t len;
@@ -192,7 +183,7 @@ int lresponse_body(lua_State* L) {
     return 0;
 }
 
-int lresponse_header(lua_State* L) {
+static int lresponse_header(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     if (res) {
         const char* key = lua_tostring(L, 2);
@@ -202,7 +193,7 @@ int lresponse_header(lua_State* L) {
     return 0;
 }
 
-int lresponse_respond(lua_State* L) {
+static int lresponse_respond(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     http_request_t* req = (http_request_t*)lua_touserdata(L, 2);
     if (res && req) {
@@ -213,7 +204,7 @@ int lresponse_respond(lua_State* L) {
     return 0;
 }
 
-int lresponse_chunk(lua_State* L) {
+static int lresponse_chunk(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     http_request_t* req = (http_request_t*)lua_touserdata(L, 2);
     if (res && req) {

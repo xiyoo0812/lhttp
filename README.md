@@ -1,12 +1,13 @@
-# luahttp
+# lhttp
 一个提供给lua使用的http协议解析库。
 
 # 依赖
-- [lua](https://github.com/xiyoo0812/lua.git)5.2以上
+- [lua](https://github.com/xiyoo0812/lua.git)5.3以上
 - 项目路径如下<br>
   |--proj <br>
   &emsp;|--lua <br>
-  &emsp;|--luahttp
+  &emsp;|--lhttp
+- [luaext](https://github.com/xiyoo0812/luaext.git) 集成了所有lua扩展库，建议使用或者参考。
 
 # 注意事项
 - 本库只做http协议解析
@@ -14,7 +15,7 @@
 
 # 用法
 ```lua
-local lhttp = require("luahttp")
+local lhttp = require("lhttp")
 
 function on_msg_recv(buf)
     local request = lhttp.create_request()

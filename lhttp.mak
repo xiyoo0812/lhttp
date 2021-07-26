@@ -1,5 +1,5 @@
 #工程名字
-PROJECT_NAME = luahttp
+PROJECT_NAME = lhttp
 #工程类型，可以是库(lib)或可执行程序(exe)
 PROJECT_TYPE = lib
 
@@ -10,7 +10,7 @@ PROJECT_NO_PREFIX=1
 #_STATIC=
 
 #c++11
-STDC_EX= -std=c++11
+STDC_EX= -std=gnu99
 
 # share.mak包含了一些编译选项，在这里可以添加新的选项和include目录
 MYCFLAGS = -I../lua/lua -w
@@ -25,7 +25,7 @@ MYLIBS = -llua
 #SRC_DIR=./src
 
 #目标文件，可以在这里定义，如果没有定义，share.mak会自动生成
-ALLOBJS = $(SRC_DIR)/luahttp.c
+#ALLOBJS =
 
 #需要排除的源文件
 #EXCLUDE_FILE=
