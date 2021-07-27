@@ -246,7 +246,7 @@ void lua_register_function(lua_State* L, const char name[], lua_CFunction func)
     lua_setfield(L, -2, name);
 }
 
-LHTTP_API int luaopen_luahttp(lua_State* L)
+LHTTP_API int luaopen_lhttp(lua_State* L)
 {
     lua_newtable(L);
     lua_register_function(L, "create_request", lhttp_create_request);
