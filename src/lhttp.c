@@ -4,8 +4,8 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#define  LUA_HTTP_SVR_REQUEST_META  "_LUA_HTTP_SVR_REQUEST_META"
-#define  LUA_HTTP_SVR_RESPONSE_META "_LUA_HTTP_SVR_RESPONSE_META"
+#define  LUA_HTTP_REQUEST_META  "_LUA_HTTP_REQUEST_META"
+#define  LUA_HTTP_RESPONSE_META "_LUA_HTTP_RESPONSE_META"
 
 static int lrequest_response(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
@@ -227,8 +227,8 @@ static const luaL_Reg lresponse[] = {
 static int lhttp_create_request(lua_State* L) {
     http_request_t* req = http_request_init();
     lua_pushlightuserdata(L, (void*)req);
-    if (luaL_getmetatable(L, LUA_HTTP_SVR_REQUEST_META) != LUA_TTABLE) {
-        luaL_newmetatable(L, LUA_HTTP_SVR_REQUEST_META);
+    if (luaL_getmetatable(L, LUA_HTTP_REQUEST_META) != LUA_TTABLE) {
+        luaL_newmetatable(L, LUA_HTTP_REQUEST_META);
         luaL_newlib(L, lrequest);
         lua_setfield(L, -2, "__index");
     }
@@ -239,8 +239,8 @@ static int lhttp_create_request(lua_State* L) {
 static int lhttp_create_response(lua_State* L) {
     http_response_t* res = http_response_init();
     lua_pushlightuserdata(L, (void*)res);
-    if (luaL_getmetatable(L, LUA_HTTP_SVR_RESPONSE_META) != LUA_TTABLE) {
-        luaL_newmetatable(L, LUA_HTTP_SVR_RESPONSE_META);
+    if (luaL_getmetatable(L, LUA_HTTP_RESPONSE_META) != LUA_TTABLE) {
+        luaL_newmetatable(L, LUA_HTTP_RESPONSE_META);
         luaL_newlib(L, lresponse);
         lua_setfield(L, -2, "__index");
     }
