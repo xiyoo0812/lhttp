@@ -4,6 +4,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#define  LUA_HTTP_SVR_REQUEST_META  "_LUA_HTTP_SVR_REQUEST_META"
+#define  LUA_HTTP_SVR_RESPONSE_META "_LUA_HTTP_SVR_RESPONSE_META"
+
 static int lrequest_response(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
@@ -131,31 +134,6 @@ static int lrequest_headers(lua_State* L) {
     return 0;
 }
 
-static int lhttp_create_request(lua_State* L) {
-    http_request_t* req = http_request_init();
-    lua_pushlightuserdata(L, (void*)req);
-    lua_newtable(L);
-    luaL_Reg l[] = {
-        { "response", lrequest_response},
-        { "process", lrequest_process },
-        { "append", lrequest_append },
-        { "method", lrequest_method },
-        { "target", lrequest_target },
-        { "chunk", lrequest_chunk },
-        { "close", lrequest_close },
-        { "is_chunk", lrequest_is_chunk },
-        { "header", lrequest_header },
-        { "headers", lrequest_headers },
-        { "state", lrequest_state },
-        { "body", lrequest_body },
-        { NULL, NULL }
-    };
-    luaL_newlib(L, l);
-    lua_setfield(L, -2, "__index");
-    lua_setmetatable(L, -2);
-    return 1;
-}
-
 static int lresponse_close(lua_State* L) {
     http_response_t* res = (http_response_t*)lua_touserdata(L, 1);
     if (res) {
@@ -220,36 +198,64 @@ static int lresponse_chunk(lua_State* L) {
     return 0;
 }
 
+static const luaL_Reg lrequest[] = {
+    { "response", lrequest_response},
+    { "process", lrequest_process },
+    { "append", lrequest_append },
+    { "method", lrequest_method },
+    { "target", lrequest_target },
+    { "chunk", lrequest_chunk },
+    { "close", lrequest_close },
+    { "is_chunk", lrequest_is_chunk },
+    { "header", lrequest_header },
+    { "headers", lrequest_headers },
+    { "state", lrequest_state },
+    { "body", lrequest_body },
+    { NULL, NULL }
+};
 
-static int lhttp_create_response(lua_State* L) {
-    http_response_t* res = http_response_init();
-    lua_pushlightuserdata(L, (void*)res);
-    lua_newtable(L);
-    luaL_Reg l[] = {
-        { "close", lresponse_close },
-        { "set_body", lresponse_body },
-        { "set_status", lresponse_status },
-        { "set_header", lresponse_header },
-        { "respond", lresponse_respond },
-        { "respond_chunk", lresponse_chunk },
-        { NULL, NULL }
-    };
-    luaL_newlib(L, l);
-    lua_setfield(L, -2, "__index");
+static const luaL_Reg lresponse[] = {
+    { "close", lresponse_close },
+    { "set_body", lresponse_body },
+    { "set_status", lresponse_status },
+    { "set_header", lresponse_header },
+    { "respond", lresponse_respond },
+    { "respond_chunk", lresponse_chunk },
+    { NULL, NULL }
+};
+
+static int lhttp_create_request(lua_State* L) {
+    http_request_t* req = http_request_init();
+    lua_pushlightuserdata(L, (void*)req);
+    if (luaL_getmetatable(L, LUA_HTTP_SVR_REQUEST_META) != LUA_TTABLE) {
+        luaL_newmetatable(L, LUA_HTTP_SVR_REQUEST_META);
+        luaL_newlib(L, lrequest);
+        lua_setfield(L, -2, "__index");
+    }
     lua_setmetatable(L, -2);
     return 1;
 }
 
-void lua_register_function(lua_State* L, const char name[], lua_CFunction func)
-{
-    lua_pushcfunction(L, func);
-    lua_setfield(L, -2, name);
+static int lhttp_create_response(lua_State* L) {
+    http_response_t* res = http_response_init();
+    lua_pushlightuserdata(L, (void*)res);
+    if (luaL_getmetatable(L, LUA_HTTP_SVR_RESPONSE_META) != LUA_TTABLE) {
+        luaL_newmetatable(L, LUA_HTTP_SVR_RESPONSE_META);
+        luaL_newlib(L, lresponse);
+        lua_setfield(L, -2, "__index");
+    }
+    lua_setmetatable(L, -2);
+    return 1;
 }
+
+static const luaL_Reg lhttp[] = {
+    { "create_request", lhttp_create_request },
+    { "create_response", lhttp_create_response },
+    { NULL, NULL }
+};
 
 LHTTP_API int luaopen_lhttp(lua_State* L)
 {
-    lua_newtable(L);
-    lua_register_function(L, "create_request", lhttp_create_request);
-    lua_register_function(L, "create_response", lhttp_create_response);
+    luaL_newlib(L, lhttp);
     return 1;
 }
