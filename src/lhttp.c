@@ -228,6 +228,7 @@ static int lhttp_create_request(lua_State* L) {
     http_request_t* req = http_request_init();
     lua_pushlightuserdata(L, (void*)req);
     if (luaL_getmetatable(L, LUA_HTTP_REQUEST_META) != LUA_TTABLE) {
+        lua_pop(L, 1);
         luaL_newmetatable(L, LUA_HTTP_REQUEST_META);
         luaL_newlib(L, lrequest);
         lua_setfield(L, -2, "__index");
@@ -240,6 +241,7 @@ static int lhttp_create_response(lua_State* L) {
     http_response_t* res = http_response_init();
     lua_pushlightuserdata(L, (void*)res);
     if (luaL_getmetatable(L, LUA_HTTP_RESPONSE_META) != LUA_TTABLE) {
+        lua_pop(L, 1);
         luaL_newmetatable(L, LUA_HTTP_RESPONSE_META);
         luaL_newlib(L, lresponse);
         lua_setfield(L, -2, "__index");
