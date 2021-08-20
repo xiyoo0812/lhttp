@@ -21,12 +21,12 @@ function on_msg_recv(buf)
     local request = lhttp.create_request()
     request:append(buf)
     request:process()
+    local url = request:url()
     local body = request:body()
     local state = request:state()
-    local target = request:target()
-    local target = request:target()
-    local is_chunk = request:is_chunk()
+    local querys = request:querys()
     local headers = request:headers()
+    local is_chunk = request:is_chunk()
     --快速返回
     local res_str = request:response(200, "application/json", "{code:123}")
     send_buf(res_str)
@@ -44,4 +44,4 @@ end
 ```
 
 # 备注
-本库参考自https://github.com/jeremycw/httpserver.h。
+本库参考自https://github.com/jeremycw/httpserver.h

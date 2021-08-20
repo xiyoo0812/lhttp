@@ -67,10 +67,10 @@ static int lrequest_method(lua_State* L) {
     return 0;
 }
 
-static int lrequest_target(lua_State* L) {
+static int lrequest_url(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
-        http_string_t target = http_request_target(req);
+        http_string_t target = http_request_url(req);
         lua_pushlstring(L, target.buf, target.len);
         return 1;
     }
@@ -118,6 +118,17 @@ static int lrequest_header(lua_State* L) {
     return 0;
 }
 
+static int lrequest_query(lua_State* L) {
+    http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
+    if (req) {
+        const char* key = lua_tostring(L, 2);
+        http_string_t value = http_request_query(req, key);
+        lua_pushlstring(L, value.buf, value.len);
+        return 1;
+    }
+    return 0;
+}
+
 static int lrequest_headers(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
@@ -125,6 +136,22 @@ static int lrequest_headers(lua_State* L) {
         http_string_t key, val;
         lua_newtable(L);
         while (http_request_headers_iterator(req, &key, &val, &iter)) {
+            lua_pushlstring(L, key.buf, key.len);
+            lua_pushlstring(L, val.buf, val.len);
+            lua_settable(L, -3);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static int lrequest_querys(lua_State* L) {
+    http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
+    if (req) {
+        int iter = 0;
+        http_string_t key, val;
+        lua_newtable(L);
+        while (http_request_querys_iterator(req, &key, &val, &iter)) {
             lua_pushlstring(L, key.buf, key.len);
             lua_pushlstring(L, val.buf, val.len);
             lua_settable(L, -3);
@@ -199,18 +226,20 @@ static int lresponse_chunk(lua_State* L) {
 }
 
 static const luaL_Reg lrequest[] = {
-    { "response", lrequest_response},
-    { "process", lrequest_process },
-    { "append", lrequest_append },
-    { "method", lrequest_method },
-    { "target", lrequest_target },
+    { "url", lrequest_url },
+    { "body", lrequest_body },
+    { "state", lrequest_state },
+    { "query", lrequest_query },
     { "chunk", lrequest_chunk },
     { "close", lrequest_close },
-    { "is_chunk", lrequest_is_chunk },
     { "header", lrequest_header },
+    { "querys", lrequest_querys },
+    { "append", lrequest_append },
+    { "method", lrequest_method },
     { "headers", lrequest_headers },
-    { "state", lrequest_state },
-    { "body", lrequest_body },
+    { "process", lrequest_process },
+    { "response", lrequest_response },
+    { "is_chunk", lrequest_is_chunk },
     { NULL, NULL }
 };
 

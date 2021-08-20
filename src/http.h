@@ -25,7 +25,8 @@
 enum hs_token {
     HS_TOK_NONE, HS_TOK_METHOD, HS_TOK_TARGET, HS_TOK_VERSION,
     HS_TOK_HEADER_KEY, HS_TOK_HEADER_VAL, HS_TOK_CHUNK_BODY, HS_TOK_BODY,
-    HS_TOK_BODY_STREAM, HS_TOK_REQ_END, HS_TOK_EOF, HS_TOK_ERROR
+    HS_TOK_BODY_STREAM, HS_TOK_REQ_END, HS_TOK_EOF, HS_TOK_ERROR,
+    HS_TOK_URL, HS_TOK_QUERY_KEY, HS_TOK_QUERY_VAL
 };
 
 // 词法分析中的状态
@@ -133,7 +134,7 @@ typedef struct {
     int32_t anchor;
     http_token_t token;
     uint8_t flags;
-} hs_stream_t;
+} http_stream_t;
 
 //http_parser_t
 typedef struct {
@@ -162,26 +163,30 @@ typedef struct http_request_s {
     char flags;
     int state;
     int timeout;
-    hs_stream_t stream;
+    http_stream_t stream;
     http_parser_t parser;
     http_token_dyn_t tokens;
 } http_request_t;
 
 //http stream
 //----------------------------------------------------------------
-LHTTP_API int http_stream_append(hs_stream_t* stream, const char* buf, int len);
+LHTTP_API int http_stream_append(http_stream_t* stream, const char* buf, int len);
 
 LHTTP_API int http_request_has_flag(http_request_t* request, int flag);
 
 LHTTP_API http_string_t http_request_method(http_request_t* request);
 
-LHTTP_API http_string_t http_request_target(http_request_t* request);
+LHTTP_API http_string_t http_request_url(http_request_t* request);
 
 LHTTP_API http_string_t http_request_body(http_request_t* request);
 
 LHTTP_API int http_request_headers_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter);
 
+LHTTP_API int http_request_querys_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter);
+
 LHTTP_API http_string_t http_request_header(http_request_t* request, char const* key);
+
+LHTTP_API http_string_t http_request_query(http_request_t* request, char const* key);
 
 LHTTP_API http_string_t http_request_chunk(struct http_request_s* request);
 
