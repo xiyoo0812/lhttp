@@ -67,10 +67,10 @@ static int lrequest_method(lua_State* L) {
     return 0;
 }
 
-static int lrequest_target(lua_State* L) {
+static int lrequest_url(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
-        http_string_t target = http_request_target(req);
+        http_string_t target = http_request_url(req);
         lua_pushlstring(L, target.buf, target.len);
         return 1;
     }
@@ -226,20 +226,20 @@ static int lresponse_chunk(lua_State* L) {
 }
 
 static const luaL_Reg lrequest[] = {
-    { "response", lrequest_response},
-    { "process", lrequest_process },
-    { "append", lrequest_append },
-    { "method", lrequest_method },
-    { "target", lrequest_target },
+    { "url", lrequest_url },
+    { "body", lrequest_body },
+    { "state", lrequest_state },
+    { "query", lrequest_query },
     { "chunk", lrequest_chunk },
     { "close", lrequest_close },
-    { "is_chunk", lrequest_is_chunk },
     { "header", lrequest_header },
-    { "headers", lrequest_headers },
-    { "query", lrequest_query },
     { "querys", lrequest_querys },
-    { "state", lrequest_state },
-    { "body", lrequest_body },
+    { "append", lrequest_append },
+    { "method", lrequest_method },
+    { "headers", lrequest_headers },
+    { "process", lrequest_process },
+    { "response", lrequest_response },
+    { "is_chunk", lrequest_is_chunk },
     { NULL, NULL }
 };
 

@@ -469,23 +469,21 @@ http_token_t http_parse(http_parser_t* parser, http_stream_t* stream) {
 }
 
 void hs_parse_querystring(http_request_t* request, http_token_t* tar_token) {
+    tar_token->type = HS_TOK_URL;
     http_string_t target = http_token_string(request, tar_token);
     char* cquery = (char*)memchr(target.buf, '?', target.len);
     if (cquery == NULL) {
+        http_token_dyn_push(&request->tokens, *tar_token);
         return;
     }
-    http_token_t path = {
-        .type = HS_TOK_PATH,
-        .index = tar_token->index,
-        .len = cquery - target.buf - 1
-    };
-    http_token_dyn_push(&request->tokens, path);
-    http_token_t tok = { 0, 0, HS_TOK_QUERY_KEY };
+    tar_token->len = cquery - target.buf - 1;
+    http_token_dyn_push(&request->tokens, *tar_token);
     int qpos = cquery - target.buf + 1;
+    http_token_t tok = { tar_token->index + qpos, 0, HS_TOK_QUERY_KEY };
     for (int i = qpos; i < target.len; i++) {
         if (target.buf[i] == '&') {
             if (tok.index != -1) {
-                http_token_dyn_push(&request->querys, tok);
+                http_token_dyn_push(&request->tokens, tok);
                 tok.index = -1;
                 tok.len = 0;
             }
@@ -495,7 +493,7 @@ void hs_parse_querystring(http_request_t* request, http_token_t* tar_token) {
         }
         else if (target.buf[i] == '=') {
             if (tok.index != -1 && tok.type != HS_TOK_QUERY_VAL) {
-                http_token_dyn_push(&request->querys, tok);
+                http_token_dyn_push(&request->tokens, tok);
                 tok.index = -1;
                 tok.len = 0;
             }
@@ -506,7 +504,7 @@ void hs_parse_querystring(http_request_t* request, http_token_t* tar_token) {
         tok.len++;
     }
     if (tok.index != -1) {
-        http_token_dyn_push(&request->querys, tok);
+        http_token_dyn_push(&request->tokens, tok);
     }
     return;
 }
@@ -534,12 +532,8 @@ http_string_t http_request_method(http_request_t* request) {
     return http_get_token_string(request, HS_TOK_METHOD);
 }
 
-http_string_t http_request_path(http_request_t* request) {
-    return http_get_token_string(request, HS_TOK_PATH);
-}
-
-http_string_t http_request_target(http_request_t* request) {
-    return http_get_token_string(request, HS_TOK_TARGET);
+http_string_t http_request_url(http_request_t* request) {
+    return http_get_token_string(request, HS_TOK_URL);
 }
 
 http_string_t http_request_body(http_request_t* request) {
@@ -547,18 +541,19 @@ http_string_t http_request_body(http_request_t* request) {
 }
 
 int http_querys_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
-    http_token_t token = request->querys.buf[*iter];
+    http_token_t token = request->tokens.buf[*iter];
     *key = http_token_string(request, &token);
-    (*iter)++;
-    token = request->querys.buf[*iter];
+    if (token.type == HS_TOK_VERSION) return 0;
+    (*iter)++; 
+    token = request->tokens.buf[*iter];
     *val = http_token_string(request, &token);
     return 1;
 }
 
 int http_request_querys_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
     if (*iter == 0) {
-        for (; *iter < request->querys.size; (*iter)++) {
-            http_token_t token = request->querys.buf[*iter];
+        for (; *iter < request->tokens.size; (*iter)++) {
+            http_token_t token = request->tokens.buf[*iter];
             if (token.type == HS_TOK_QUERY_KEY) {
                 return http_querys_iterator(request, key, val, iter);
             }
@@ -599,8 +594,8 @@ int http_request_headers_iterator(http_request_t* request, http_string_t* key, h
 
 http_string_t http_request_query(http_request_t* request, char const* key) {
     int len = strlen(key);
-    for (int i = 0; i < request->querys.size; i++) {
-        http_token_t token = request->querys.buf[i];
+    for (int i = 0; i < request->tokens.size; i++) {
+        http_token_t token = request->tokens.buf[i];
         if (token.type == HS_TOK_QUERY_KEY && token.len == len) {
             if (http_char_case_cmp(&request->stream.buf[token.index], key, len)) {
                 token = request->tokens.buf[i + 1];
@@ -741,8 +736,6 @@ void http_close_request(http_request_t* request) {
     http_request_free_buffer(request);
     free(request->tokens.buf);
     request->tokens.buf = NULL;
-    free(request->querys.buf);
-    request->querys.buf = NULL;
     free(request);
 }
 
@@ -813,12 +806,7 @@ http_request_t* http_request_init() {
         free(request->tokens.buf);
         request->tokens.buf = NULL;
     }
-    http_token_dyn_init(&request->tokens, 16);
-    if (request->querys.buf) {
-        free(request->querys.buf);
-        request->querys.buf = NULL;
-    }
-    http_token_dyn_init(&request->querys, 16);
+    http_token_dyn_init(&request->tokens, 32);
     return request;
 }
 
