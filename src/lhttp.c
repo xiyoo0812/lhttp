@@ -118,6 +118,17 @@ static int lrequest_header(lua_State* L) {
     return 0;
 }
 
+static int lrequest_query(lua_State* L) {
+    http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
+    if (req) {
+        const char* key = lua_tostring(L, 2);
+        http_string_t value = http_request_query(req, key);
+        lua_pushlstring(L, value.buf, value.len);
+        return 1;
+    }
+    return 0;
+}
+
 static int lrequest_headers(lua_State* L) {
     http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
     if (req) {
@@ -125,6 +136,22 @@ static int lrequest_headers(lua_State* L) {
         http_string_t key, val;
         lua_newtable(L);
         while (http_request_headers_iterator(req, &key, &val, &iter)) {
+            lua_pushlstring(L, key.buf, key.len);
+            lua_pushlstring(L, val.buf, val.len);
+            lua_settable(L, -3);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static int lrequest_querys(lua_State* L) {
+    http_request_t* req = (http_request_t*)lua_touserdata(L, 1);
+    if (req) {
+        int iter = 0;
+        http_string_t key, val;
+        lua_newtable(L);
+        while (http_request_querys_iterator(req, &key, &val, &iter)) {
             lua_pushlstring(L, key.buf, key.len);
             lua_pushlstring(L, val.buf, val.len);
             lua_settable(L, -3);
@@ -209,6 +236,8 @@ static const luaL_Reg lrequest[] = {
     { "is_chunk", lrequest_is_chunk },
     { "header", lrequest_header },
     { "headers", lrequest_headers },
+    { "query", lrequest_query },
+    { "querys", lrequest_querys },
     { "state", lrequest_state },
     { "body", lrequest_body },
     { NULL, NULL }
