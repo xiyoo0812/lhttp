@@ -468,7 +468,7 @@ http_token_t http_parse(http_parser_t* parser, http_stream_t* stream) {
     return token;
 }
 
-void hs_parse_querystring(http_request_t* request, http_token_t* tar_token) {
+void http_parse_querys(http_request_t* request, http_token_t* tar_token) {
     tar_token->type = HS_TOK_URL;
     http_string_t target = http_token_string(request, tar_token);
     char* cquery = (char*)memchr(target.buf, '?', target.len);
@@ -823,7 +823,7 @@ void http_process_request(http_request_t* request) {
             request->state = HTTP_SESSION_FINISH;
             break;
         case HS_TOK_TARGET:
-            hs_parse_querystring(request, &token);
+            http_parse_querys(request, &token);
             continue;
         case HS_TOK_BODY_STREAM:
         case HS_TOK_CHUNK_BODY:
