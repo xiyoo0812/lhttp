@@ -107,11 +107,10 @@ enum hs_meta_type {
 // structs
 //-----------------------------------------------------------------
 // 用于读取请求详细信息的字符串类型
-struct http_string_s {
+typedef struct http_string_s {
     char const* buf;
     int len;
-};
-typedef struct http_string_s http_string_t;
+} http_string_t;
 
 typedef struct {
     int index;
