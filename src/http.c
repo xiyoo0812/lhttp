@@ -97,7 +97,7 @@ static int const http_token_start_states[] = {
     0, 0, 0,
 };
 
-char const* http_status_text[] = {
+static char const* http_status_text[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
@@ -182,7 +182,7 @@ char const* http_status_text[] = {
 
 //http utils
 //----------------------------------------------------------------
-int http_char_case_cmp(char const* a, char const* b, int len) {
+static int http_char_case_cmp(char const* a, char const* b, int len) {
     for (int i = 0; i < len; i++) {
         char c1 = a[i] >= 'A' && a[i] <= 'Z' ? a[i] + 32 : a[i];
         char c2 = b[i] >= 'A' && b[i] <= 'Z' ? b[i] + 32 : b[i];
@@ -191,14 +191,14 @@ int http_char_case_cmp(char const* a, char const* b, int len) {
     return 1;
 }
 
-http_string_t http_token_string(http_request_t* request, http_token_t* token) {
+static http_string_t http_token_string(http_request_t* request, http_token_t* token) {
     return (http_string_t) {
         .buf = &request->stream.buf[token->index],
         .len = token->len
     };
 }
 
-void http_generate_datetime(char* datetime) {
+static void http_generate_datetime(char* datetime) {
     time_t rawtime;
     struct tm* timeinfo;
     time(&rawtime);
@@ -206,7 +206,7 @@ void http_generate_datetime(char* datetime) {
     strftime(datetime, 32, "%a, %d %b %Y %T GMT", timeinfo);
 }
 
-void http_token_dyn_push(http_token_dyn_t* dyn, http_token_t a) {
+static void http_token_dyn_push(http_token_dyn_t* dyn, http_token_t a) {
     if (dyn->size == dyn->capacity) {
         dyn->capacity *= 2;
         dyn->buf = (http_token_t*)realloc(dyn->buf, dyn->capacity * sizeof(http_token_t));
@@ -216,7 +216,7 @@ void http_token_dyn_push(http_token_dyn_t* dyn, http_token_t a) {
     dyn->size++;
 }
 
-void http_token_dyn_init(http_token_dyn_t* dyn, int capacity) {
+static void http_token_dyn_init(http_token_dyn_t* dyn, int capacity) {
     dyn->buf = (http_token_t*)malloc(sizeof(http_token_t) * capacity);
     assert(dyn->buf != NULL);
     dyn->size = 0;
@@ -244,23 +244,23 @@ int http_stream_append(http_stream_t* stream, const char* buf, int len) {
     return len;
 }
 
-void http_stream_begin_token(http_stream_t* stream, int token_type) {
+static void http_stream_begin_token(http_stream_t* stream, int token_type) {
     stream->token.index = stream->index;
     stream->token.type = token_type;
 }
 
-int http_stream_can_contain(http_stream_t* stream, int64_t size) {
+static int http_stream_can_contain(http_stream_t* stream, int64_t size) {
     return HTTP_MAX_REQUEST_BUF_SIZE - stream->index + 1 >= size;
 }
 
-int http_stream_next(http_stream_t* stream, char* c) {
+static int http_stream_next(http_stream_t* stream, char* c) {
     HTTP_FLAG_CLEAR(stream->flags, HS_SF_CONSUMED);
     if (stream->index >= stream->length) return 0;
     *c = stream->buf[stream->index];
     return 1;
 }
 
-void http_stream_consume(http_stream_t* stream) {
+static void http_stream_consume(http_stream_t* stream) {
     if (HTTP_FLAG_CHECK(stream->flags, HS_SF_CONSUMED)) return;
     HTTP_FLAG_SET(stream->flags, HS_SF_CONSUMED);
     stream->index++;
@@ -268,7 +268,7 @@ void http_stream_consume(http_stream_t* stream) {
     stream->token.len = stream->token.type == 0 ? 0 : new_len;
 }
 
-void http_stream_shift(http_stream_t* stream) {
+static void http_stream_shift(http_stream_t* stream) {
     if (stream->token.index == stream->anchor) return;
     if (stream->token.len > 0) {
         char* dst = stream->buf + stream->anchor;
@@ -281,7 +281,7 @@ void http_stream_shift(http_stream_t* stream) {
     stream->length = stream->anchor + stream->token.len;
 }
 
-int http_stream_jump(http_stream_t* stream, int offset) {
+static int http_stream_jump(http_stream_t* stream, int offset) {
     HTTP_FLAG_SET(stream->flags, HS_SF_CONSUMED);
     if (stream->index + offset > stream->length) return 0;
     stream->index += offset;
@@ -290,7 +290,7 @@ int http_stream_jump(http_stream_t* stream, int offset) {
     return 1;
 }
 
-int http_stream_jumpall(http_stream_t* stream) {
+static int http_stream_jumpall(http_stream_t* stream) {
     int offset = stream->length - stream->index;
     stream->index += offset;
     int new_len = stream->token.len + offset;
@@ -299,7 +299,7 @@ int http_stream_jumpall(http_stream_t* stream) {
     return offset;
 }
 
-http_token_t http_stream_emit(http_stream_t* stream) {
+static http_token_t http_stream_emit(http_stream_t* stream) {
     http_token_t token = stream->token;
     http_token_t none = { 0, 0, 0 };
     stream->token = none;
@@ -308,7 +308,7 @@ http_token_t http_stream_emit(http_stream_t* stream) {
 
 //http parser
 //----------------------------------------------------------------
-void http_trigger_meta(http_parser_t* parser, int event) {
+static void http_trigger_meta(http_parser_t* parser, int event) {
     int to = http_meta_transitions[parser->meta * HS_META_TYPE_LEN + event];
     parser->meta = to;
 }
@@ -319,7 +319,7 @@ void http_trigger_meta(http_parser_t* parser, int event) {
     low = c >= 'A' && c <= 'Z' ? c + 32 : c; \
     if (low != m) http_trigger_meta(parser, meta);
 
-http_token_t http_transition_action(http_parser_t* parser, http_stream_t* stream, char c, int8_t from, int8_t to) {
+static http_token_t http_transition_action(http_parser_t* parser, http_stream_t* stream, char c, int8_t from, int8_t to) {
     http_token_t emitted = { 0, 0, 0 };
     if (from == HN) {
         stream->anchor = stream->index;
@@ -428,7 +428,7 @@ http_token_t http_transition_action(http_parser_t* parser, http_stream_t* stream
     return emitted;
 }
 
-http_token_t http_meta_emit(http_parser_t* parser) {
+static http_token_t http_meta_emit(http_parser_t* parser) {
     http_token_t token = { 0, 0, 0 };
     switch (parser->meta) {
     case M_SEN:
@@ -443,7 +443,7 @@ http_token_t http_meta_emit(http_parser_t* parser) {
     return token;
 }
 
-http_token_t http_parse(http_parser_t* parser, http_stream_t* stream) {
+static http_token_t http_parse(http_parser_t* parser, http_stream_t* stream) {
     char c = 0;
     http_token_t token = http_meta_emit(parser);
     if (token.type != HS_TOK_NONE) return token;
@@ -468,7 +468,7 @@ http_token_t http_parse(http_parser_t* parser, http_stream_t* stream) {
     return token;
 }
 
-void http_parse_querys(http_request_t* request, http_token_t* tar_token) {
+static void http_parse_querys(http_request_t* request, http_token_t* tar_token) {
     tar_token->type = HS_TOK_URL;
     http_string_t target = http_token_string(request, tar_token);
     char* cquery = (char*)memchr(target.buf, '?', target.len);
@@ -511,7 +511,7 @@ void http_parse_querys(http_request_t* request, http_token_t* tar_token) {
 
 //http request 接口
 //--------------------------------------------------------------------------
-http_string_t http_get_token_string(http_request_t* request, int token_type) {
+static http_string_t http_get_token_string(http_request_t* request, int token_type) {
     if (request->tokens.buf == NULL) {
         return (http_string_t) { 0, 0 };
     }
@@ -540,7 +540,7 @@ http_string_t http_request_body(http_request_t* request) {
     return http_get_token_string(request, HS_TOK_BODY);
 }
 
-int http_querys_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
+static int http_querys_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
     http_token_t token = request->tokens.buf[*iter];
     *key = http_token_string(request, &token);
     if (token.type == HS_TOK_VERSION) return 0;
@@ -566,7 +566,7 @@ int http_request_querys_iterator(http_request_t* request, http_string_t* key, ht
     }
 }
 
-int http_headers_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
+static int http_headers_iterator(http_request_t* request, http_string_t* key, http_string_t* val, int* iter) {
     http_token_t token = request->tokens.buf[*iter];
     if (token.type == HS_TOK_BODY) return 0;
     *key = http_token_string(request, &token);
@@ -620,7 +620,7 @@ http_string_t http_request_header(http_request_t* request, char const* key) {
     return (http_string_t) { 0 };
 }
 
-void http_request_free_buffer(http_request_t* session) {
+static void http_request_free_buffer(http_request_t* session) {
     if (session->stream.buf) {
         free(session->stream.buf);
         session->stream.buf = NULL;
@@ -666,14 +666,14 @@ typedef struct {
     int size;
 } grwprintf_t;
 
-void grwprintf_init(grwprintf_t* ctx, int capacity) {
+static void grwprintf_init(grwprintf_t* ctx, int capacity) {
     ctx->size = 0;
     ctx->buf = (char*)malloc(capacity);
     assert(ctx->buf != NULL);
     ctx->capacity = capacity;
 }
 
-void grwmemcpy(grwprintf_t* ctx, char const* src, int size) {
+static void grwmemcpy(grwprintf_t* ctx, char const* src, int size) {
     if (ctx->size + size > ctx->capacity) {
         ctx->capacity = ctx->size + size;
         ctx->buf = (char*)realloc(ctx->buf, ctx->capacity);
@@ -683,7 +683,7 @@ void grwmemcpy(grwprintf_t* ctx, char const* src, int size) {
     ctx->size += size;
 }
 
-void grwprintf(grwprintf_t* ctx, char const* fmt, ...) {
+static void grwprintf(grwprintf_t* ctx, char const* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     int bytes = vsnprintf(ctx->buf + ctx->size, ctx->capacity - ctx->size, fmt, args);
@@ -697,7 +697,7 @@ void grwprintf(grwprintf_t* ctx, char const* fmt, ...) {
     va_end(args);
 }
 
-void http_buffer_headers(http_request_t* request, http_response_t* response, grwprintf_t* printctx) {
+static void http_buffer_headers(http_request_t* request, http_response_t* response, grwprintf_t* printctx) {
     http_header_t* header = response->headers;
     while (header) {
         grwprintf(printctx, "%s: %s\r\n", header->key, header->value);
@@ -709,7 +709,7 @@ void http_buffer_headers(http_request_t* request, http_response_t* response, grw
     grwprintf(printctx, "\r\n");
 }
 
-void http_respond_headers(http_request_t* request, http_response_t* response, grwprintf_t* printctx) {
+static void http_respond_headers(http_request_t* request, http_response_t* response, grwprintf_t* printctx) {
     if (HTTP_FLAG_CHECK(request->flags, HTTP_KEEP_ALIVE)) {
         http_response_header(response, "Connection", "keep-alive");
     }
