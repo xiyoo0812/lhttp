@@ -636,7 +636,6 @@ http_string_t http_request_chunk(struct http_request_s* request) {
 //--------------------------------------------------------------------------
 http_response_t* http_response_init() {
     http_response_t* response = (http_response_t*)calloc(1, sizeof(http_response_t));
-    assert(response != NULL);
     response->status = 200;
     return response;
 }
@@ -722,20 +721,33 @@ static void http_respond_headers(http_request_t* request, http_response_t* respo
     http_buffer_headers(request, response, printctx);
 }
 
-void http_close_response(http_response_t* response) {
+void http_clean_response(http_response_t* response) {
     http_header_t* header = response->headers;
     while (header) {
         http_header_t* tmp = header;
         header = tmp->next;
         free(tmp);
     }
+}
+
+void http_close_response(http_response_t* response) {
+    http_clean_response(response);
     free(response);
 }
 
+void http_clean_request(http_request_t* request) {
+    if (request->stream.buf) {
+        free(request->stream.buf);
+        request->stream.buf = NULL;
+    }
+    if (request->tokens.buf) {
+        free(request->tokens.buf);
+        request->tokens.buf = NULL;
+    }
+}
+
 void http_close_request(http_request_t* request) {
-    http_request_free_buffer(request);
-    free(request->tokens.buf);
-    request->tokens.buf = NULL;
+    http_clean_request(request);
     free(request);
 }
 
@@ -750,8 +762,8 @@ http_string_t http_respond_chunk(http_request_t* request, http_response_t* respo
     grwprintf(&printctx, "%X\r\n", response->content_length);
     grwmemcpy(&printctx, response->body, response->content_length);
     grwprintf(&printctx, "\r\n");
-    http_close_request(request);
-    http_close_response(response);
+    http_clean_request(request);
+    http_clean_response(response);
     return (http_string_t) {
         .buf = printctx.buf,
         .len = printctx.size
@@ -765,8 +777,8 @@ http_string_t http_respond_chunk_end(http_request_t* request, http_response_t* r
     http_buffer_headers(request, response, &printctx);
     grwprintf(&printctx, "\r\n");
     HTTP_FLAG_CLEAR(request->flags, HTTP_CHUNKED_RESPONSE);
-    http_close_request(request);
-    http_close_response(response);
+    http_clean_request(request);
+    http_clean_response(response);
     return (http_string_t) {
         .buf = printctx.buf,
         .len = printctx.size
@@ -780,8 +792,8 @@ http_string_t http_respond(http_request_t* request, http_response_t* response) {
     if (response->body) {
         grwmemcpy(&printctx, response->body, response->content_length);
     }
-    http_close_request(request);
-    http_close_response(response);
+    http_clean_request(request);
+    http_clean_response(response);
     return (http_string_t) {
         .buf = printctx.buf,
         .len = printctx.size
@@ -793,11 +805,12 @@ http_string_t http_request_response(http_request_t* request, int code, char cons
     http_response_status(response, code);
     http_response_header(response, "Content-Type", type);
     http_response_body(response, message, strlen(message));
-    return http_respond(request, response);
+    http_string_t result = http_respond(request, response);
+    http_close_response(response);
+    return result;
 }
 
-http_request_t* http_request_init() {
-    http_request_t* request = (http_request_t*)calloc(1, sizeof(http_request_t));
+void http_request_reset(http_request_t* request) {
     request->flags = HTTP_AUTOMATIC;
     request->state = HTTP_REQUEST_PARSE;
     request->parser = (http_parser_t){ 0 };
@@ -807,6 +820,11 @@ http_request_t* http_request_init() {
         request->tokens.buf = NULL;
     }
     http_token_dyn_init(&request->tokens, 32);
+}
+
+http_request_t* http_request_init() {
+    http_request_t* request = (http_request_t*)calloc(1, sizeof(http_request_t));
+    http_request_reset(request);
     return request;
 }
 

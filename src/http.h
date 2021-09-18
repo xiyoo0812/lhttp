@@ -201,7 +201,11 @@ LHTTP_API void http_response_body(http_response_t* response, char const* body, i
 
 LHTTP_API void http_close_response(http_response_t* response);
 
+LHTTP_API void http_clean_response(http_response_t* response);
+
 LHTTP_API void http_close_request(http_request_t* request);
+
+LHTTP_API void http_clean_request(http_request_t* request);
 
 LHTTP_API http_string_t http_respond_chunk(http_request_t* request, http_response_t* response);
 
@@ -212,6 +216,8 @@ LHTTP_API http_string_t http_respond(http_request_t* request, http_response_t* r
 LHTTP_API http_string_t http_request_response(http_request_t* request, int code, char const* type, char const* message);
 
 LHTTP_API http_request_t* http_request_init();
+
+LHTTP_API void http_request_reset(http_request_t* request);
 
 LHTTP_API void http_process_request(http_request_t* request);
 
