@@ -728,6 +728,7 @@ void http_clean_response(http_response_t* response) {
         header = tmp->next;
         free(tmp);
     }
+    response->headers = NULL;
 }
 
 void http_close_response(http_response_t* response) {
