@@ -23,6 +23,7 @@ namespace lhttp {
             "chunked", &http_request::chunked,
             "version", &http_request::version,
             "chunk_size", &http_request::chunk_size,
+            "content_size", &http_request::content_size,
             "get_headers", &http_request::get_headers,
             "get_params", &http_request::get_params,
             "get_header", &http_request::get_header,

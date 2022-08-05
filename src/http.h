@@ -21,15 +21,15 @@ namespace lhttp {
     const string RESPONSE = "HTTP/1.1 {}\r\nDate: {}\r\n{}\r\n{}";
 
     #define SC_UNKNOWN 0
-    #define	SC_OK 200
-    #define	SC_NOCONTENT 204
-    #define	SC_PARTIAL 206
+    #define SC_OK 200
+    #define SC_NOCONTENT 204
+    #define SC_PARTIAL 206
     #define SC_OBJMOVED 302
-    #define	SC_BADREQUEST 400
-    #define	SC_FORBIDDEN 403
-    #define	SC_NOTFOUND 404
-    #define	SC_BADMETHOD 405
-    #define	SC_SERVERERROR 500
+    #define SC_BADREQUEST 400
+    #define SC_FORBIDDEN 403
+    #define SC_NOTFOUND 404
+    #define SC_BADMETHOD 405
+    #define SC_SERVERERROR 500
     #define SC_SERVERBUSY 503
 
     class http_request
@@ -151,6 +151,7 @@ namespace lhttp {
                     body.append(lines[i]);
                 }
             }
+            chunk_size = body.size();
         }
 
     public:
